@@ -1,0 +1,17 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+, "scripts/GenreList.js", "screens/GenreDetailScreen.js", "screens/AddSongScreen.js", "screens/GenreListScreen.js", "app/SongRecommendationScreen.js"  ]
+}
