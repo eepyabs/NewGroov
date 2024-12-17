@@ -7,17 +7,29 @@ const GenreListScreen = () => {
     const [genres, setGenres] = useState([]);
     const navigation = useNavigation();
 
+    const fetchGenres = async () => {
+        try {
+            const storedGenres = await getAllGenres();
+            console.log("Fetched genres:", storedGenres);
+            setGenres(storedGenres || []);
+        } catch (error) {
+            console.error('Error fetching genres:', error);
+            Alert.alert('Error', 'Could not fetch genres. Please try again.');
+        }
+    };
+
     useEffect(() => {
-        const fetchGenres = async () => {
-            try {
-                const storedGenres = await getAllGenres();
-                setGenres(storedGenres || []);
-            } catch (error) {
-                console.error('Error fetching genres:', error);
-            }
-        };
         fetchGenres();
     }, []);
+
+    const handleNavigateToDetail = (genre) => {
+        if (genre) {
+            navigation.navigate('GenreDetail', { genre });
+        } else {
+            console.error("Attempted to navigate with invalid genre:", genre);
+            Alert.alert("Navigation Error", "Invalid genre selected.");
+        }
+    };
 
     return (
         <View style={styles.container}>
@@ -25,17 +37,18 @@ const GenreListScreen = () => {
             {genres.length > 0 ? (
                 <FlatList
                     data={genres}
-                    keyExtractor={(item) => item}
+                    keyExtractor={(item, index) => `${item}-${item}`}
                     renderItem={({ item }) => (
                         <Button
                             title={item}
-                            onPress={() => navigation.navigate('GenreDetail', {genre: item })}
+                            onPress={() => handleNavigateToDetail(item)}
                         />
                     )}
                 />
             ) : (
                 <Text style={styles.emptyText}>No genres available.</Text>
             )}
+            <Button title="Refresh Genres" onPress={fetchGenres} />
         </View>
     );
 };

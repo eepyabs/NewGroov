@@ -5,13 +5,21 @@ import { saveSong } from '@/utils/StorageHelper';
 const AddSongScreen = ({ route, navigation }) => {
     const rawSong = route.params?.song || {title: "Untitled", artist: "Unknown Artist"};
     const genre = route.params?.genre || "Miscellaneous";
-    const song = typeof rawSong === "string" ? { title: rawSong.split(" by ")[0].trim(), artist: rawSong.split(" by ")[1]?.trim() || "Unknown Artist" }
-    : {
-        title: rawSong.title || "Untitled",
-        artist: rawSong.artist || "Unknown Artist",
-    };
 
     const handleSave = async () => {
+        const song = (() => {
+            if (typeof rawSong === "string") {
+                const [title, artist] = rawSong.split(" by ").map((s) => s.trim());
+                return {
+                    title: title || "Untitled",
+                    artist: artist || "Unknown Artist",
+                };
+            }
+            return {
+                title: rawSong.title?.trim() || "Untitled",
+                artist: rawSong.artist?.trim() || "Unknown Artist",
+            };
+        })();
         try {
             await saveSong(genre.trim(), song);
             Alert.alert("Success", "Song saved successfully!");
@@ -21,12 +29,21 @@ const AddSongScreen = ({ route, navigation }) => {
             Alert.alert("Error", "An error occurred while saving the song.");
         }
     };
-
+    
+    const displaySong = typeof rawSong === "string"
+        ?{
+            title: rawSong.split(" by ")[0]?.trim() || "Untitled",
+            artist: rawSong.split(" by ")[1]?.trim() || "Unknown Artist",
+        }
+        : {
+            title: rawSong.title?.trim() || "Untitled",
+            artist: rawSong.artist?.trim() || "Unknown Artist",
+        };
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Add Song</Text>
-            <Text style={styles.subtitle}>Song: {song.title}</Text>
-            <Text style={styles.subtitle}>Artist: {song.artist}</Text>
+            <Text style={styles.subtitle}>Song: {displaySong.title}</Text>
+            <Text style={styles.subtitle}>Artist: {displaySong.artist}</Text>
             <Text style={styles.subtitle}>Genre: {genre}</Text>
             <Button title="Save Song" onPress={handleSave} />
         </View>

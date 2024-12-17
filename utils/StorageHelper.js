@@ -5,49 +5,57 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
  * @param {string} genre
  * @return {string}
  */
-
 function normalizeGenre(genre) {
     return genre.trim().toLowerCase();
 }
 
+/**
+ * Get the AsyncStorage key for a genre
+ * @param {string} genre
+ * @return {string}
+ */
+function getGenreKey(genre) {
+    return `@genre_${normalizeGenre(genre)}`;
+}
 
 /**
  * Save a song to a specific genre
  * @param {string} genre
  * @param {Object} song
  */
-
 export async function saveSong(genre, song) {
     try {
         const normalizedGenre = normalizeGenre(genre);
-        const genreKey = getGenereKey(genre);
+        const genreKey = getGenreKey(normalizedGenre);
 
-        song.title = song.title ? song.title.trim() : "Unknown Title";
-        song.artist = song.artist ? song.artist.trim() : "Unknown Artist";
+        const normalizedSong = {
+            title: song.title.trim().toLowerCase(),
+            artist: song.artist.trim().toLowerCase(),
+        };
 
-        if (song.title.includes(' by ') && song.artist === "Unknown Artist") {
-            const [title, artist] = song.title.split(' by ');
-            song.title = title.trim();
-            song.artist = artist.trim();
-        }
-
+        // Retrieve stored songs
         const storedSongs = JSON.parse(await AsyncStorage.getItem(genreKey)) || [];
 
+        // Check for duplicates based on normalized data
         const isDuplicate = storedSongs.some(
             (savedSong) =>
-                savedSong.title.trim().toLowerCase() === song.title.trim().toLowerCase() &&
-                savedSong.artist.trim().toLowerCase() === song.artist.trim().toLowerCase()
+                savedSong.title.toLowerCase() === normalizedSong.title &&
+                savedSong.artist.toLowerCase() === normalizedSong.artist
         );
-        
+
         if (!isDuplicate) {
-            storedSongs.push(song);
+            // Add the original song (not normalized) to storage if no duplicates
+            storedSongs.push({
+                title: song.title.trim(),
+                artist: song.artist.trim(),
+            });
             await AsyncStorage.setItem(genreKey, JSON.stringify(storedSongs));
-            console.log(`Save songs:`, song);
+            console.log("Song saved:", song);
         } else {
-            console.log(`Duplicate song not saved.`);
+            console.log("Duplicate song not saved:", song);
         }
     } catch (error) {
-        console.error('Error saving song:', error);
+        console.error("Error saving song:", error);
         throw error;
     }
 }
@@ -60,10 +68,10 @@ export async function saveSong(genre, song) {
 export async function getSongsByGenre(genre) {
     try {
         const normalizedGenre = normalizeGenre(genre);
-        const genreKey = `@genre_${normalizedGenre}`;
+        const genreKey = getGenreKey(normalizedGenre);
         return JSON.parse(await AsyncStorage.getItem(genreKey)) || [];
     } catch (error) {
-        console.error('Error retrieving songs by genre:', error);
+        console.error("Error retrieving songs by genre:", error);
         return [];
     }
 }
@@ -72,14 +80,13 @@ export async function getSongsByGenre(genre) {
  * Get all genres that have saved songs
  * @returns {Promise<Array>}
  */
-
 export async function getAllGenres() {
     try {
         const keys = await AsyncStorage.getAllKeys();
         const genreKeys = keys.filter((key) => key.startsWith('@genre_'));
         return genreKeys.map((key) => key.replace('@genre_', ''));
     } catch (error) {
-        console.error('Error retrieving genre:', error);
+        console.error("Error retrieving genres:", error);
         return [];
     }
 }
@@ -93,10 +100,16 @@ export async function getAllGenres() {
 export async function deleteSong(genre, song) {
     try {
         const normalizedGenre = normalizeGenre(genre);
-        const genreKey = `@genre_${normalizedGenre}`;
+        const genreKey = getGenreKey(normalizedGenre);
         const storedSongs = JSON.parse(await AsyncStorage.getItem(genreKey)) || [];
+        const normalizedSong = {
+            title: song.title.trim().toLowerCase(),
+            artist: song.artist.trim().toLowerCase(),
+        };
         const updatedSongs = storedSongs.filter(
-            (savedSong) => savedSong.title !== song.title || savedSong.artist !== song.artist
+            (savedSong) =>
+                savedSong.title.toLowerCase() !== normalizedSong.title ||
+                savedSong.artist.toLowerCase() !== normalizedSong.artist
         );
 
         if (updatedSongs.length === 0) {
@@ -107,22 +120,22 @@ export async function deleteSong(genre, song) {
             console.log(`Updated songs for genre: ${normalizedGenre}`, updatedSongs);
         }
     } catch (error) {
-        console.error('Error deleting song:', error);
+        console.error("Error deleting song:", error);
         throw error;
     }
 }
 
+/**
+ * Debug all AsyncStorage data
+ */
 export async function debugStorage() {
     try {
         const keys = await AsyncStorage.getAllKeys();
         const allData = await AsyncStorage.multiGet(keys);
 
-        console.log('All stored data:', allData);
+        console.log("All stored data:", allData);
     } catch (error) {
-        console.error('Error debugging storage:', error);
+        console.error("Error debugging storage:", error);
     }
 }
 
-function getGenereKey(genre) {
-    return `@genre_${normalizeGenre(genre)}`;
-}

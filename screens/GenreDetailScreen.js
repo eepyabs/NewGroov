@@ -13,11 +13,7 @@ const GenreDetailScreen = () => {
         if (genre) {
             const fetchSongs = async () => {
                 const genreSongs = await getSongsByGenre(genre);
-                const cleanedSongs = genreSongs.map((song) => ({
-                    title: song.title.trim(),
-                    artist: song.artist ? song.artist.trim() : "Unknown Artist",
-                }));
-                setSongs(cleanedSongs || []);
+                setSongs(genreSongs || []);
             };
             fetchSongs();
         }
@@ -40,8 +36,8 @@ const GenreDetailScreen = () => {
                             setSongs((prevSongs) =>
                                 prevSongs.filter(
                                     (item) => 
-                                        item.title !== song.title || 
-                                        item.artist !== song.artist
+                                        item.title.toLowerCase() !== song.title.toLowerCase() || 
+                                        item.artist.toLowerCase() !== song.artist.toLowerCase()
                                 )
                             );
                         } catch (error) {
@@ -73,7 +69,7 @@ const GenreDetailScreen = () => {
                 <FlatList
                     data={songs}
                     renderItem={renderItem}
-                    keyExtractor={(item, index) => `${item.title}-${item.artist}-${index}`}
+                    keyExtractor={(item) => `${item.title.toLowerCase()}-${item.artist.toLowerCase()}`}
                 />
             ): (
                 <Text>No songs found in this genre.</Text>
@@ -113,5 +109,6 @@ const styles = StyleSheet.create({
         color: "#555",
     }
 });
+
 
 export default GenreDetailScreen;

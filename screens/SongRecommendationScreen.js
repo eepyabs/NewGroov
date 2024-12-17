@@ -106,13 +106,14 @@ const SongRecommendationScreen = () => {
     const handleSongSelect = async (song) => {
         try {
             const genre = song.genre;
+            const title = song.title.split(' by ')[0]?.trim() || "Untitled";
+            const artist = song.title.split(' by ')[1]?.trim() || "Unknown Artist";
             const songDetails = {
-                title: song.title,
-                artist: song.title.split(' by ')[1] || 'Unknown Artist',
+                title,
+                artist,
             };
             if (genre) {
-                await saveSong(genre, songDetails);
-                navigation.navigate("AddSong", { song: song.title, genre });
+                navigation.navigate("AddSong", { song: songDetails, genre });
             } else {
                 console.error("Genre is undefined");
             }
