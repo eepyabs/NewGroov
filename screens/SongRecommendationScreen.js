@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Image, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Buffer } from 'buffer';
-import { saveSong } from '../utils/StorageHelper';
+import { isLoading, setIsLoading } from 'expo-font';
 
 const getSpotifyAccessToken = async () => {
     const clientId = '3e4c690e51954611b47b9d26b8ad1540';
@@ -50,12 +50,9 @@ const fetchSongSuggestions = async (songTitle) => {
         }
 
         const data = await response.json();
-        console.log("API Response Data:", data);
 
         const songs = await Promise.all(
             data.tracks.items.map(async (track) => {
-                console.log("Track Artists:", track.artists);
-            
                 const artist = track.artists?.[0];
                 const artistName = artist?.name || 'Unknown Artist';
 
@@ -94,36 +91,35 @@ const fetchSongSuggestions = async (songTitle) => {
 const SongRecommendationScreen = () => {
     const [songTitle, setSongTitle] = useState('');
     const [songSuggestions, setSongSuggestions] = useState([]);
-    const navigation = useNavigation(); // Use the navigation hook
+    const [isLoading, setIsLoading] = useState(false);
+    const navigation = useNavigation();
 
     const handleShare = async () => {
         if (songTitle.trim() !== '') {
+            setIsLoading(true);
             const suggestions = await fetchSongSuggestions(songTitle);
             setSongSuggestions(suggestions);
+            setIsLoading(false);
         }
     };
 
     const handleSongSelect = async (song) => {
-        try {
-            const genre = song.genre;
-            const title = song.title.split(' by ')[0]?.trim() || "Untitled";
-            const artist = song.title.split(' by ')[1]?.trim() || "Unknown Artist";
-            const songDetails = {
-                title,
-                artist,
-            };
-            if (genre) {
-                navigation.navigate("AddSong", { song: songDetails, genre });
-            } else {
-                console.error("Genre is undefined");
-            }
-        } catch (error) {
-            console.error('Error categorizing song:', error);
-        }
+        const genre = song.genre;
+        const title = song.title.split(' by ')[0]?.trim() || "Untitled";
+        const artist = song.title.split(' by ')[1]?.trim() || "Unknown Artist";            const songDetails = {
+            title,
+            artist,
+        };
+        navigation.navigate("AddSong", {song: songDetails, genre});
+        
+    };
+    const renderFooter = () => {
+        return <View style={{ height: 100 }} />;
     };
 
     return (
         <View style={styles.container}>
+            <Image source={require('../images/logo.png')} style={styles.logo} />
             <Text style={styles.title}>Search for a Song</Text>
             <TextInput
                 style={styles.input}
@@ -135,24 +131,20 @@ const SongRecommendationScreen = () => {
                 <Text style={styles.buttonText}>Search for Suggestions</Text>
             </TouchableOpacity>
 
-            {songSuggestions.length > 0 && (
-                <View style={styles.suggestionsContainer}>
-                    <Text style={styles.suggestionsTitle}>Select a Song:</Text>
-                    <FlatList
-                        data={songSuggestions}
-                        renderItem={({ item }) => (
-                            <TouchableOpacity
-                                style={styles.button}
-                                onPress={() => handleSongSelect(item)}
-                                >
-                                    <Text style={styles.suggestionText}>{item.title}</Text>
-                                </TouchableOpacity>
-                        )}
-                        keyExtractor={item => item.id}
-                    />
-                </View>
+            {isLoading ? (
+                <ActivityIndicator size="large" color="66BEBA" />
+            ) : (
+                <FlatList
+                    data={songSuggestions}
+                    renderItem={({ item}) => (
+                        <TouchableOpacity style={styles.button} onPress={() => handleSongSelect(item)}>
+                            <Text style={styles.suggestionText}>{item.title}</Text>
+                        </TouchableOpacity>
+                    )}
+                    keyExtractor={(item) => item.id}
+                    ListFooterComponent={renderFooter}
+                />
             )}
-
             <TouchableOpacity
                 style={styles.button}
                 onPress={() => navigation.navigate('GenreList')}
@@ -166,26 +158,24 @@ const SongRecommendationScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
         alignItems: 'center',
         padding: 20,
         backgroundColor: 'black',
     },
-    suggestionsContainer: {
-        marginTop: 20,
-        width: '80%',
+    logo: {
+        width: 200,
+        height: 200,
+        position: 'absolute',
+        top: 20,
+        alignSelf: 'center',
     },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 20,
         color: '#66BEBA',
-    },
-    suggestionsTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 10,
-        color: '#66BEBA',
+        marginTop: 200,
     },
     input: {
         width: '80%',
@@ -209,10 +199,6 @@ const styles = StyleSheet.create({
         color: '#66BEBA',
         fontSize: 16,
         fontWeight: 'bold',
-    },
-    navigationButton: {
-        marginTop: 20,
-        width: '80%',
     },
     suggestionText: {
         fontSize: 16,
