@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Button, StyleSheet, Alert } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { saveSong } from '@/utils/StorageHelper';
 
 const AddSongScreen = ({ route, navigation }) => {
@@ -45,7 +45,9 @@ const AddSongScreen = ({ route, navigation }) => {
             <Text style={styles.subtitle}>Song: {displaySong.title}</Text>
             <Text style={styles.subtitle}>Artist: {displaySong.artist}</Text>
             <Text style={styles.subtitle}>Genre: {genre}</Text>
-            <Button title="Save Song" onPress={handleSave} />
+            <TouchableOpacity style={styles.roundButton} onPress={handleSave}>
+                <Text style={styles.roundButtonText}>Save Song</Text>
+            </TouchableOpacity>
         </View>
     );
 };
@@ -56,16 +58,39 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
         padding: 20,
-        color: 'black',
+        backgroundColor: "#323231",
     },
     title: {
         fontSize: 24,
         fontWeight: "bold",
         marginBottom: 20,
+        color: "#66BEBA",
     },
     subtitle: {
         fontSize: 18,
         marginBottom: 10,
+        color: "#66BEBA",
+    },
+    roundButton: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        backgroundColor: "#59045C",
+        justifyContent: "center",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
+        elevation: 10,
+        borderWidth: 5,
+        borderColor: "black",
+        marginTop: 20,
+    },
+    roundButtonText: {
+        color: "#66BEBA",
+        fontSize: 16,
+        fontWeight: "bold",
+        textAlign: "center",
     },
 });
 

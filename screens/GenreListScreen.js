@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, View, Text, StyleSheet, FlatList } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { getAllGenres } from '@/utils/StorageHelper';
 import { useNavigation } from '@react-navigation/native';
 
@@ -37,18 +37,29 @@ const GenreListScreen = () => {
             {genres.length > 0 ? (
                 <FlatList
                     data={genres}
-                    keyExtractor={(item, index) => `${item}-${item}`}
+                    keyExtractor={(item, index) => `${item}-${index}`}
                     renderItem={({ item }) => (
-                        <Button
-                            title={item}
+                        <TouchableOpacity
+                            style={styles.button}
                             onPress={() => handleNavigateToDetail(item)}
-                        />
+                        >
+                            <Text style={styles.buttonText}>{item}</Text>
+                        </TouchableOpacity>
                     )}
                 />
             ) : (
                 <Text style={styles.emptyText}>No genres available.</Text>
             )}
-            <Button title="Refresh Genres" onPress={fetchGenres} />
+            <TouchableOpacity style={styles.button} onPress={fetchGenres}>
+                <Text style={styles.buttonText}>Refresh Genres</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={styles.button}
+                onPress={() => navigation.navigate('SongRecommendation')}
+            >
+                <Text style={styles.buttonText}>Back to Song Recommendations</Text>
+            </TouchableOpacity>
         </View>
     );
 };
@@ -58,7 +69,7 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 20,
         justifyContent: "flex-start",
-        backgroundColor: 'black',
+        backgroundColor: '#323231',
     },
     title: {
         fontSize: 24,
@@ -71,6 +82,20 @@ const styles = StyleSheet.create({
         color: '#666',
         textAlign: 'center',
         marginTop: 20,
+    },
+    button: {
+        backgroundColor: '#59045C',
+        padding: 10,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: 'white',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    buttonText: {
+        color: '#66BEBA',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 });
 

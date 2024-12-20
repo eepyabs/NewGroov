@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-start',
         alignItems: 'center',
         padding: 20,
-        backgroundColor: 'black',
+        backgroundColor: '#323231',
     },
     logo: {
         width: 200,
