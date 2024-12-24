@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Image, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Buffer } from 'buffer';
-import { isLoading, setIsLoading } from 'expo-font';
 
 const getSpotifyAccessToken = async () => {
     const clientId = '3e4c690e51954611b47b9d26b8ad1540';
@@ -78,6 +77,7 @@ const fetchSongSuggestions = async (songTitle) => {
                     title: `${track.name} by ${artistName}`,
                     uri: track.uri,
                     genre,
+                    albumCover: track.album.images[0]?.url || null,
                 };
             })
         );
@@ -106,21 +106,21 @@ const SongRecommendationScreen = () => {
     const handleSongSelect = async (song) => {
         const genre = song.genre;
         const title = song.title.split(' by ')[0]?.trim() || "Untitled";
-        const artist = song.title.split(' by ')[1]?.trim() || "Unknown Artist";            const songDetails = {
+        const artist = song.title.split(' by ')[1]?.trim() || "Unknown Artist";
+        const songDetails = {
             title,
             artist,
+            albumCover: song.albumCover || null,
         };
-        navigation.navigate("AddSong", {song: songDetails, genre});
-        
+
+        navigation.navigate('AddSong', { song: songDetails, genre });  
     };
-    const renderFooter = () => {
-        return <View style={{ height: 100 }} />;
-    };
+    const renderFooter = () => <View style={{ height: 100 }} />;
 
     return (
         <View style={styles.container}>
             <Image source={require('../images/logo.png')} style={styles.logo} />
-            <Text style={styles.title}>Search for a Song</Text>
+            <Text style={styles.title}>Find your NewGroov!</Text>
             <TextInput
                 style={styles.input}
                 placeholder="Enter song title"
