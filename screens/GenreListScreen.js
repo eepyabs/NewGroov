@@ -72,9 +72,11 @@ const styles = StyleSheet.create({
         backgroundColor: '#323231',
     },
     title: {
-        fontSize: 24,
+        fontSize: 30,
+        fontFamily: 'Lobster',
         fontWeight: 'bold',
         marginBottom: 20,
+        textAlign: 'center',
         color: '#66BEBA',
     },
     emptyText: {

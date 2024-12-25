@@ -119,6 +119,7 @@ const SongRecommendationScreen = () => {
 
     return (
         <View style={styles.container}>
+            <Image source={require('../images/cat.png')} style={styles.catImage} />
             <Image source={require('../images/logo.png')} style={styles.logo} />
             <Text style={styles.title}>Find your NewGroov!</Text>
             <TextInput
@@ -136,7 +137,7 @@ const SongRecommendationScreen = () => {
             ) : (
                 <FlatList
                     data={songSuggestions}
-                    renderItem={({ item}) => (
+                    renderItem={({ item }) => (
                         <TouchableOpacity style={styles.button} onPress={() => handleSongSelect(item)}>
                             <Text style={styles.suggestionText}>{item.title}</Text>
                         </TouchableOpacity>
@@ -163,19 +164,28 @@ const styles = StyleSheet.create({
         padding: 20,
         backgroundColor: '#323231',
     },
+    catImage: {
+        width: 100,
+        height: 100,
+        position: 'absolute',
+        top: 30,
+        left: 10,
+    },
     logo: {
         width: 200,
         height: 200,
         position: 'absolute',
-        top: 20,
+        top: 50,
         alignSelf: 'center',
     },
     title: {
         fontSize: 24,
+        fontFamily: 'Lobster',
         fontWeight: 'bold',
         marginBottom: 20,
         color: '#66BEBA',
-        marginTop: 200,
+        marginTop: 300,
+        marginLeft: 10,
     },
     input: {
         width: '80%',

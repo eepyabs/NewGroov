@@ -49,7 +49,7 @@ const AddSongScreen = ({ route, navigation }) => {
                 <Text style={styles.navButtonText}>Back to Recommendations</Text>
             </TouchableOpacity>
 
-            <Text style={styles.title}>Add Song</Text>
+            <Text style={styles.title}>Add Song!</Text>
 
             {rawSong.albumCover ? (
                 <Image source={{ uri: rawSong.albumCover }} style={styles.albumCover} />
@@ -79,7 +79,8 @@ const styles = StyleSheet.create({
         backgroundColor: "#323231",
     },
     title: {
-        fontSize: 24,
+        fontSize: 40,
+        fontFamily: 'Lobster',
         fontWeight: "bold",
         marginBottom: 60,
         color: "#66BEBA",

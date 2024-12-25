@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { registerRootComponent } from 'expo';
+import * as Font from 'expo-font';
 import SongRecommendationScreen from './screens/SongRecommendationScreen';
 import AddSongScreen from './screens/AddSongScreen';
 import GenreListScreen from './screens/GenreListScreen';
@@ -10,6 +12,31 @@ import GenreDetailScreen from './screens/GenreDetailScreen';
 const Stack = createStackNavigator();
 
 function App() {
+    const [fontsLoaded, setFontsLoaded] = useState(false);
+
+    useEffect(() => {
+        const loadFonts = async () => {
+            try {
+                await Font.loadAsync({
+                    'Lobster': require('./assets/fonts/Lobster-Regular.ttf'),
+                });
+                setFontsLoaded(true);
+            } catch (error) {
+                console.error('Error loading fonts:', error);
+            }
+        };
+
+        loadFonts();
+    }, []);
+
+    if (!fontsLoaded) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color="#66BEBA" />
+            </View>
+        );
+    }
+
     return (
         <NavigationContainer>
             <Stack.Navigator 
@@ -21,6 +48,7 @@ function App() {
                     headerTintColor: '#fff',
                     headerTintStyle: {
                         fontWeight: 'bold',
+                        fontFamily: 'Lobster',
                     },
                 }}
             >
