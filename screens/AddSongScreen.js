@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Alert, Animated, Easing } from "react-native";
+import { View, Text, Image, TouchableOpacity, StyleSheet, Alert, Animated, Easing, Linking } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import { saveSong } from '@/utils/StorageHelper';
 
@@ -43,19 +43,29 @@ const AddSongScreen = ({ route, navigation }) => {
         }
     };
 
-    const openSpotifyLink = () => {
-        if (rawSong.spotifyLink) {
-            Linking.openURL(rawSong.spotifyLink).catch((err) =>
-                console.error("Failed to open Spotify link:", err)
-            );
-        } else {
-            Alert.alert("Error", "Spotify link not available.");
+    const openSpotifyLink = async (spotifyUrl) => {
+        if (!spotifyUrl) {
+            Alert.alert("Error", "Cannot open the Spotify link.");
+        }
+        try {
+            const supported = await Linking.canOpenURL(spotifyUrl);
+            if (supported) {
+                await Linking.openURL(spotifyUrl);
+            } else {
+                Alert.alert('Error', 'Cannot open the Spotify link.');
+            }
+        } catch (error) {
+            console.error('Error opening URL:', error);
+            Alert.alert('Error', 'Failed to open the link.');
         }
     };
 
     return (
         <View style={styles.container}>
-            <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate("SongRecommendation")} >
+            <TouchableOpacity 
+                style={styles.navButton} 
+                onPress={() => navigation.navigate("SongRecommendation")}
+            >
                 <AntDesign name="arrowleft" size={24} color="#66BEBA" style={styles.arrowIcon} />
                 <Text style={styles.navButtonText}>Back to Recommendations</Text>
             </TouchableOpacity>
@@ -73,8 +83,8 @@ const AddSongScreen = ({ route, navigation }) => {
             <Text style={styles.subtitle}>Genre: {genre}</Text>
 
             {rawSong.spotifyLink ? (
-                <TouchableOpacity onPress={openSpotifyLink}>
-                    <Text style={styles.openSpotifyLink}>Play on Spotify!</Text>
+                <TouchableOpacity onPress={() => openSpotifyLink(rawSong.spotifyLink)}>
+                    <Text style={styles.spotifyLinkText}>Play on Spotify!</Text>
                 </TouchableOpacity>
             ) : (
                 <Text style={styles.noSpotifyLinkText}>Spotify link not available</Text>

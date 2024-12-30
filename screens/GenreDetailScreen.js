@@ -88,11 +88,13 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
         padding: 20,
+        backgroundColor: 'black',
     },
     title: {
         fontSize: 24,
         fontWeight: "bold",
         marginBottom: 20,
+        color: '#66BEBA',
     },
     songItem: {
         padding: 10,
@@ -103,6 +105,7 @@ const styles = StyleSheet.create({
     songTitle: {
         fontSize: 16,
         fontWeight: "bold",
+        color: '#66BEBA',
     },
     songArtist: {
         fontSize: 14,

@@ -113,7 +113,7 @@ const SongRecommendationScreen = ({ navigation }) => {
             title,
             artist,
             albumCover: song.albumCover || null,
-            spotifyUri: `https://open.spotify.com/track/${song.id}`,
+            spotifyLink: `https://open.spotify.com/track/${song.id}`,
         };
 
         await stopSong();
@@ -150,11 +150,9 @@ const SongRecommendationScreen = ({ navigation }) => {
 
     useFocusEffect(
         React.useCallback(() => {
-            console.log('Playing sound on focus');
             playSongOnLoop();
 
             return () => {
-                console.log('Stopping sound on unfocus');
                 stopSong();
             };
         }, [])
