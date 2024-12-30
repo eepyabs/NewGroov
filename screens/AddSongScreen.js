@@ -30,6 +30,7 @@ const AddSongScreen = ({ route, navigation }) => {
             title: rawSong.title || "Untitled",
             artist: rawSong.artist || "Unknown Artist",
             albumCover: rawSong.albumCover || null,
+            spotifyLink: rawSong.spotifyLink || null,
         };
 
         try {
@@ -39,6 +40,16 @@ const AddSongScreen = ({ route, navigation }) => {
         } catch (error) {
             console.error("Failed to save the song:", error);
             Alert.alert("Error", "An error occurred while saving the song.");
+        }
+    };
+
+    const openSpotifyLink = () => {
+        if (rawSong.spotifyLink) {
+            Linking.openURL(rawSong.spotifyLink).catch((err) =>
+                console.error("Failed to open Spotify link:", err)
+            );
+        } else {
+            Alert.alert("Error", "Spotify link not available.");
         }
     };
 
@@ -60,6 +71,14 @@ const AddSongScreen = ({ route, navigation }) => {
             <Text style={styles.subtitle}>Song: {rawSong.title}</Text>
             <Text style={styles.subtitle}>Artist: {rawSong.artist}</Text>
             <Text style={styles.subtitle}>Genre: {genre}</Text>
+
+            {rawSong.spotifyLink ? (
+                <TouchableOpacity onPress={openSpotifyLink}>
+                    <Text style={styles.openSpotifyLink}>Play on Spotify!</Text>
+                </TouchableOpacity>
+            ) : (
+                <Text style={styles.noSpotifyLinkText}>Spotify link not available</Text>
+            )}
 
             <Animated.View style={[styles.roundButton, {backgroundColor: animatedBackgroundColor }]}>
                 <TouchableOpacity onPress={handleSave}>
@@ -95,6 +114,17 @@ const styles = StyleSheet.create({
         height: 200,
         marginBottom: 20,
         borderRadius: 10,
+    },
+    spotifyLinkText: {
+        fontSize: 16,
+        color: "#66BEBA",
+        textDecorationLine: "underline",
+        marginTop: 10,
+    },
+    noSpotifyLinkText: {
+        fontSize: 16,
+        color: "#888",
+        marginTop: 10,
     },
     roundButton: {
         width: 100,

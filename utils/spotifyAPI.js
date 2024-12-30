@@ -1,4 +1,4 @@
-import axois from "axois";
+import axios from "axios";
 
 const SPOTIFY_API_URL = "https://api.spotify.com/v1";
 
@@ -12,7 +12,7 @@ const SPOTIFY_API_URL = "https://api.spotify.com/v1";
 
 export async function searchTrack(query, token) {
     try {
-        const response = await axois.get(`${SPOTIFY_API_URL}/search`, {
+        const response = await axios.get(`${SPOTIFY_API_URL}/search`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -21,9 +21,11 @@ export async function searchTrack(query, token) {
                 type: "track",
                 limit: 1,
             },
+            timeout: 5000,
         });
 
         if (response.data.tracks.items.length === 0) {
+            console.log("Spotify API response:", response.data.tracks.items[0]);
             throw new Error("No tracks found for the given query.");
         }
         const track = response.data.tracks.items[0];
@@ -31,6 +33,7 @@ export async function searchTrack(query, token) {
             title: track.name,
             artist: track.artists.map((artist) => artist.name).join(", "),
             albumCover: track.album.images[0]?.url || null,
+            spotifyLink: track.external_urls.spotify,
         };
     } catch (error) {
         console.error("Error fetching track from Spotify:", error);

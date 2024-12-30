@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Image, ActivityIndicator } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Image, ActivityIndicator, Alert } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { Buffer } from 'buffer';
+import { Audio } from 'expo-av';
 
 const getSpotifyAccessToken = async () => {
     const clientId = '3e4c690e51954611b47b9d26b8ad1540';
@@ -55,7 +56,7 @@ const fetchSongSuggestions = async (songTitle) => {
                 const artist = track.artists?.[0];
                 const artistName = artist?.name || 'Unknown Artist';
 
-                let genre = 'Unknown Genre';
+                let genre = 'Miscellaneous';
                 if (artist) {
                     const artistResponse = await fetch(
                         `https://api.spotify.com/v1/artists/${artist.id}`,
@@ -68,7 +69,7 @@ const fetchSongSuggestions = async (songTitle) => {
 
                     if (artistResponse.ok) {
                         const artistData = await artistResponse.json();
-                        genre = artistData.genres?.[0] || 'Unknown Genre';
+                        genre = artistData.genres?.[0] || 'Miscellaneous';
                     }
                 }
 
@@ -78,6 +79,7 @@ const fetchSongSuggestions = async (songTitle) => {
                     uri: track.uri,
                     genre,
                     albumCover: track.album.images[0]?.url || null,
+                    preview_url: track.preview_url || null,
                 };
             })
         );
@@ -88,11 +90,11 @@ const fetchSongSuggestions = async (songTitle) => {
     }
 };
 
-const SongRecommendationScreen = () => {
+const SongRecommendationScreen = ({ navigation }) => {
     const [songTitle, setSongTitle] = useState('');
     const [songSuggestions, setSongSuggestions] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-    const navigation = useNavigation();
+    const [sound, setSound] = useState(null);
 
     const handleShare = async () => {
         if (songTitle.trim() !== '') {
@@ -111,15 +113,58 @@ const SongRecommendationScreen = () => {
             title,
             artist,
             albumCover: song.albumCover || null,
+            spotifyUri: `https://open.spotify.com/track/${song.id}`,
         };
 
+        await stopSong();
         navigation.navigate('AddSong', { song: songDetails, genre });  
     };
+
+    const playSongOnLoop = async () => {
+        if (sound) return;
+        try {
+            const { sound: newSound } = await Audio.Sound.createAsync(
+                require('../assets/sounds/itty-bitty-8-bit.mp3'),
+                { isLooping: true }
+            );
+            setSound(newSound);
+            await newSound.playAsync();
+        } catch (error) {
+            console.error('Error playing sound:', error);
+            Alert.alert('Playback Error', 'Unable to play the song.');
+        }
+    };
+
+    const stopSong = async () => {
+        if (sound) {
+            try {
+                await sound.stopAsync();
+                await sound.unloadAsync();
+            } catch (error) {
+                console.error('Error stopping or unloading sound:', error);
+            } finally {
+                setSound(null);
+            }
+        }
+    };    
+
+    useFocusEffect(
+        React.useCallback(() => {
+            console.log('Playing sound on focus');
+            playSongOnLoop();
+
+            return () => {
+                console.log('Stopping sound on unfocus');
+                stopSong();
+            };
+        }, [])
+    );
+
     const renderFooter = () => <View style={{ height: 100 }} />;
 
     return (
         <View style={styles.container}>
-            <Image source={require('../images/cat.png')} style={styles.catImage} />
+            <Image source={require('../images/dancing_cat.gif')} style={styles.dancingCat} />
             <Image source={require('../images/logo.png')} style={styles.logo} />
             <Text style={styles.title}>Find your NewGroov!</Text>
             <TextInput
@@ -148,7 +193,10 @@ const SongRecommendationScreen = () => {
             )}
             <TouchableOpacity
                 style={styles.button}
-                onPress={() => navigation.navigate('GenreList')}
+                onPress={async () => {
+                    await stopSong();
+                    navigation.replace('GenreList');
+                }}
             >
                 <Text style={styles.buttonText}>Go to Genre List</Text>
             </TouchableOpacity>
@@ -164,18 +212,18 @@ const styles = StyleSheet.create({
         padding: 20,
         backgroundColor: '#323231',
     },
-    catImage: {
-        width: 100,
-        height: 100,
+    dancingCat: {
+        width: 200,
+        height: 200,
         position: 'absolute',
         top: 30,
         left: 10,
     },
     logo: {
-        width: 200,
-        height: 200,
+        width: 100,
+        height: 100,
         position: 'absolute',
-        top: 50,
+        top: 200,
         alignSelf: 'center',
     },
     title: {

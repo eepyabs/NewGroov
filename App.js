@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { registerRootComponent } from 'expo';
 import * as Font from 'expo-font';
+import { Audio } from 'expo-av';
 import SongRecommendationScreen from './screens/SongRecommendationScreen';
 import AddSongScreen from './screens/AddSongScreen';
 import GenreListScreen from './screens/GenreListScreen';
@@ -26,7 +27,17 @@ function App() {
             }
         };
 
+        const setupAudioCleanup = () => {
+            return () => {
+                Audio.setIsEnabledAsync(false).catch((error) => {
+                    console.error('Error disabling audio globally:', error);
+                });
+            };
+        };
+
         loadFonts();
+
+        return setupAudioCleanup();
     }, []);
 
     if (!fontsLoaded) {
