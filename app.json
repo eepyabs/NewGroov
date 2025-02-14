@@ -8,7 +8,9 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "assets": ["assets/fonts"],
+    "assets": [
+      "assets/fonts"
+    ],
     "ios": {
       "supportsTablet": true
     },
@@ -33,7 +35,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true

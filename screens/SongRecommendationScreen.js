@@ -1,49 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Image, ActivityIndicator, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { Buffer } from 'buffer';
 import { Audio } from 'expo-av';
-
-const getSpotifyAccessToken = async () => {
-    const clientId = '3e4c690e51954611b47b9d26b8ad1540';
-    const clientSecret = '9728de64de00412ab0f0d89072951af7';
-    const authString = `${clientId}:${clientSecret}`;
-    const encodedAuth = Buffer.from(authString).toString('base64');
-
-    try {
-        const response = await fetch('https://accounts.spotify.com/api/token', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Basic ${encodedAuth}`,
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: 'grant_type=client_credentials',
-        });
-
-        if (!response.ok) {
-            throw new Error(`Error fetching access token: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        return data.access_token;
-    } catch (error) {
-        console.error('Error in getSpotifyAccessToken:', error);
-        throw error;
-    }
-};
 
 const fetchSongSuggestions = async (songTitle) => {
     try {
-        const accessToken = await getSpotifyAccessToken();
-
-        const response = await fetch(
-            `https://api.spotify.com/v1/search?q=${encodeURIComponent(songTitle)}&type=track&limit=5`,
-            {
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                },
-            }
-        );
+        const response = await fetch(`https://api.deezer.com/search?q=${encodeURIComponent(songTitle)}`);
 
         if (!response.ok) {
             throw new Error(`Error fetching songs: ${response.statusText}`);
@@ -51,38 +13,30 @@ const fetchSongSuggestions = async (songTitle) => {
 
         const data = await response.json();
 
-        const songs = await Promise.all(
-            data.tracks.items.map(async (track) => {
-                const artist = track.artists?.[0];
-                const artistName = artist?.name || 'Unknown Artist';
-
-                let genre = 'Miscellaneous';
-                if (artist) {
-                    const artistResponse = await fetch(
-                        `https://api.spotify.com/v1/artists/${artist.id}`,
-                        {
-                            headers: {
-                                'Authorization': `Bearer ${accessToken}`,
-                            },
-                        }
-                    );
-
-                    if (artistResponse.ok) {
-                        const artistData = await artistResponse.json();
-                        genre = artistData.genres?.[0] || 'Miscellaneous';
-                    }
+        const songs = await Promise.all(data.data.map(async (song) => {
+            let genreName = "Unknown Genre";
+            
+            try {
+                // Fetch the genre from the album details
+                const albumResponse = await fetch(`https://api.deezer.com/album/${song.album.id}`);
+                if (albumResponse.ok) {
+                    const albumData = await albumResponse.json();
+                    genreName = albumData?.genres?.data?.[0]?.name || "Unknown Genre";
                 }
+            } catch (genreError) {
+                console.error(`Error fetching genre for song: ${song.title}`, genreError);
+            }
 
-                return {
-                    id: track.id,
-                    title: `${track.name} by ${artistName}`,
-                    uri: track.uri,
-                    genre,
-                    albumCover: track.album.images[0]?.url || null,
-                    preview_url: track.preview_url || null,
-                };
-            })
-        );
+            return {
+                id: song.id.toString(),
+                title: song.title,
+                artist: song.artist.name,
+                albumCover: song.album.cover_medium || null,
+                previewUrl: song.preview || null,  // Ensure preview URL exists
+                genre: genreName, // Use genre from Deezer album API
+            };
+        }));
+
         return songs;
     } catch (error) {
         console.error('Error in fetchSongSuggestions:', error);
@@ -106,32 +60,29 @@ const SongRecommendationScreen = ({ navigation }) => {
     };
 
     const handleSongSelect = async (song) => {
-        const genre = song.genre;
-        const title = song.title.split(' by ')[0]?.trim() || "Untitled";
-        const artist = song.title.split(' by ')[1]?.trim() || "Unknown Artist";
-        const songDetails = {
-            title,
-            artist,
-            albumCover: song.albumCover || null,
-            spotifyLink: `https://open.spotify.com/track/${song.id}`,
-        };
-
         await stopSong();
-        navigation.navigate('AddSong', { song: songDetails, genre });  
+        navigation.navigate('AddSong', { song, genre: song.genre }); 
     };
 
-    const playSongOnLoop = async () => {
-        if (sound) return;
+    const playPreview = async (previewUrl) => {
+        await stopSong();
+        if (!previewUrl) {
+            Alert.alert("Preview Unavailable", "This song does not have a preview.");
+            return;
+        }
         try {
+            const response = await fetch(previewUrl, { method: 'HEAD'});
+
+            if (!response.ok) {
+                throw new Error(`Invalid preview URL: ${previewUrl}`);
+            }
             const { sound: newSound } = await Audio.Sound.createAsync(
-                require('../assets/sounds/itty-bitty-8-bit.mp3'),
-                { isLooping: true }
+                { uri: previewUrl },
+                { shouldPlay: true }
             );
             setSound(newSound);
-            await newSound.playAsync();
         } catch (error) {
-            console.error('Error playing sound:', error);
-            Alert.alert('Playback Error', 'Unable to play the song.');
+            console.error('Error playing preview:', error);
         }
     };
 
@@ -141,7 +92,7 @@ const SongRecommendationScreen = ({ navigation }) => {
                 await sound.stopAsync();
                 await sound.unloadAsync();
             } catch (error) {
-                console.error('Error stopping or unloading sound:', error);
+                console.error('Error stopping audio:', error);
             } finally {
                 setSound(null);
             }
@@ -150,21 +101,16 @@ const SongRecommendationScreen = ({ navigation }) => {
 
     useFocusEffect(
         React.useCallback(() => {
-            playSongOnLoop();
-
-            return () => {
-                stopSong();
-            };
+            return () => stopSong();  
         }, [])
     );
-
-    const renderFooter = () => <View style={{ height: 100 }} />;
 
     return (
         <View style={styles.container}>
             <Image source={require('../images/dancing_cat.gif')} style={styles.dancingCat} />
             <Image source={require('../images/logo.png')} style={styles.logo} />
             <Text style={styles.title}>Find your NewGroov!</Text>
+
             <TextInput
                 style={styles.input}
                 placeholder="Enter song title"
@@ -181,14 +127,24 @@ const SongRecommendationScreen = ({ navigation }) => {
                 <FlatList
                     data={songSuggestions}
                     renderItem={({ item }) => (
-                        <TouchableOpacity style={styles.button} onPress={() => handleSongSelect(item)}>
-                            <Text style={styles.suggestionText}>{item.title}</Text>
-                        </TouchableOpacity>
+                        <View style={styles.songItem}>
+                            <Image source={{ uri: item.albumCover }} style={styles.albumCover} />
+                            <View style={styles.songInfo}>
+                                <Text style={styles.songTitle}>{item.title}</Text>
+                                <Text style={styles.songArtist}>{item.artist}</Text>
+                                <TouchableOpacity style={styles.playButton} onPress={() => playPreview(item.previewUrl)}>
+                                    <Text style={styles.buttonText}>▶ Play Preview</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={styles.selectButton} onPress={() => handleSongSelect(item)}>
+                                    <Text style={styles.buttonText}>✔ Select Song</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
                     )}
                     keyExtractor={(item) => item.id}
-                    ListFooterComponent={renderFooter}
                 />
             )}
+
             <TouchableOpacity
                 style={styles.button}
                 onPress={async () => {
@@ -211,10 +167,10 @@ const styles = StyleSheet.create({
         backgroundColor: '#323231',
     },
     dancingCat: {
-        width: 200,
-        height: 200,
+        width: 175,
+        height: 175,
         position: 'absolute',
-        top: 30,
+        top: 20,
         left: 10,
     },
     logo: {
@@ -256,9 +212,52 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
-    suggestionText: {
+    songItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#444',
+        padding: 15,
+        borderRadius: 10,
+        marginBottom: 15,
+        width: 300,
+        minHeight: 150,
+    },
+    albumCover: {
+        width: 90,
+        height: 90,
+        borderRadius: 8,
+        marginRight: 15,
+    },
+    songInfo: {
+        flex: 1,
+        justifyContent: 'center',
+        paddingHorizontal: 10,
+    },
+    songTitle: {
         fontSize: 16,
-        color: '#66BEBA',
+        color: '#fff',
+        fontWeight: 'bold',
+    },
+    songArtist: {
+        fontSize: 14,
+        color: '#ccc',
+        marginBottom: 5,
+    },
+    playButton: {
+        backgroundColor: '#007BFF',
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 5,
+        alignItems: 'center',
+        marginTop: 8,
+    },
+    selectButton: {
+        backgroundColor: '#FF6347',
+        paddingVertical: 4,
+        paddingHorizontal: 4,
+        borderRadius: 5,
+        alignItems: 'center',
+        marginTop: 8,
     },
 });
 

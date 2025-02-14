@@ -88,6 +88,4 @@ function App() {
     );
 }
 
-registerRootComponent(App);
-
 export default App;

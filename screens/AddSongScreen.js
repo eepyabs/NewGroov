@@ -1,11 +1,11 @@
-import React, { useRef, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Alert, Animated, Easing, Linking } from "react-native";
+import React, { useRef, useEffect, useState } from 'react';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Alert, Animated, Easing } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import { saveSong } from '@/utils/StorageHelper';
 
 const AddSongScreen = ({ route, navigation }) => {
-    const rawSong = route.params?.song || {title: "Untitled", artist: "Unknown Artist", albumCover: null};
-    const genre = route.params?.genre || "Miscellaneous"; 
+    const rawSong = route.params?.song || { title: "Untitled", artist: "Unknown Artist", albumCover: null };
+    const genre = route.params?.genre || "Unknown Genre";
 
     const colorAnimation = useRef(new Animated.Value(0)).current;
 
@@ -18,19 +18,14 @@ const AddSongScreen = ({ route, navigation }) => {
                 useNativeDriver: false,
             })
         ).start();
-    }, [colorAnimation]);
-
-    const animatedBackgroundColor = colorAnimation.interpolate({
-        inputRange: [0, 1],
-        outputRange: ["#59045C", "#49034B"],
-    });
+    }, []);
 
     const handleSave = async () => {
         const song = {
             title: rawSong.title || "Untitled",
             artist: rawSong.artist || "Unknown Artist",
             albumCover: rawSong.albumCover || null,
-            spotifyLink: rawSong.spotifyLink || null,
+            genre: genre,
         };
 
         try {
@@ -40,23 +35,6 @@ const AddSongScreen = ({ route, navigation }) => {
         } catch (error) {
             console.error("Failed to save the song:", error);
             Alert.alert("Error", "An error occurred while saving the song.");
-        }
-    };
-
-    const openSpotifyLink = async (spotifyUrl) => {
-        if (!spotifyUrl) {
-            Alert.alert("Error", "Cannot open the Spotify link.");
-        }
-        try {
-            const supported = await Linking.canOpenURL(spotifyUrl);
-            if (supported) {
-                await Linking.openURL(spotifyUrl);
-            } else {
-                Alert.alert('Error', 'Cannot open the Spotify link.');
-            }
-        } catch (error) {
-            console.error('Error opening URL:', error);
-            Alert.alert('Error', 'Failed to open the link.');
         }
     };
 
@@ -78,19 +56,14 @@ const AddSongScreen = ({ route, navigation }) => {
                 <Text style={styles.subtitle}>No Album Cover Available</Text>
             )}
 
-            <Text style={styles.subtitle}>Song: {rawSong.title}</Text>
-            <Text style={styles.subtitle}>Artist: {rawSong.artist}</Text>
-            <Text style={styles.subtitle}>Genre: {genre}</Text>
+            <Text style={styles.subtitle}>🎵 Song: {rawSong.title}</Text>
+            <Text style={styles.subtitle}>🎤 Artist: {rawSong.artist}</Text>
+            <Text style={styles.subtitle}>🎼 Genre: {genre}</Text>
 
-            {rawSong.spotifyLink ? (
-                <TouchableOpacity onPress={() => openSpotifyLink(rawSong.spotifyLink)}>
-                    <Text style={styles.spotifyLinkText}>Play on Spotify!</Text>
-                </TouchableOpacity>
-            ) : (
-                <Text style={styles.noSpotifyLinkText}>Spotify link not available</Text>
-            )}
-
-            <Animated.View style={[styles.roundButton, {backgroundColor: animatedBackgroundColor }]}>
+            <Animated.View style={[styles.roundButton, { backgroundColor: colorAnimation.interpolate({
+                inputRange: [0, 1],
+                outputRange: ["#59045C", "#49034B"],
+            }) }]}>
                 <TouchableOpacity onPress={handleSave}>
                     <Text style={styles.roundButtonText}>Save Song</Text>
                 </TouchableOpacity>
@@ -125,29 +98,12 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         borderRadius: 10,
     },
-    spotifyLinkText: {
-        fontSize: 16,
-        color: "#66BEBA",
-        textDecorationLine: "underline",
-        marginTop: 10,
-    },
-    noSpotifyLinkText: {
-        fontSize: 16,
-        color: "#888",
-        marginTop: 10,
-    },
     roundButton: {
         width: 100,
         height: 100,
         borderRadius: 50,
         justifyContent: "center",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 5 },
-        shadowOpacity: 0.3,
-        shadowRadius: 10,
-        elevation: 10,
-        borderWidth: 5,
-        borderColor: "black",
+        alignItems: "center",
         marginTop: 20,
     },
     roundButtonText: {
@@ -162,19 +118,6 @@ const styles = StyleSheet.create({
         left: 10,
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#59045C",
-        paddingVertical: 5,
-        paddingHorizontal: 10,
-        borderRadius: 25,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.5,
-        shadowRadius: 5,
-        elevation: 5,
-    },
-    arrowIcon: {
-        marginRight: 5,
-        fontSize: 20,
     },
     navButtonText: {
         color: "#66BEBA",
