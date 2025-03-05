@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { registerRootComponent } from 'expo';
 import * as Font from 'expo-font';
 import { Audio } from 'expo-av';
 import SongRecommendationScreen from './screens/SongRecommendationScreen';
 import AddSongScreen from './screens/AddSongScreen';
 import GenreListScreen from './screens/GenreListScreen';
 import GenreDetailScreen from './screens/GenreDetailScreen';
+import AuthScreen from './screens/AuthScreen';
 
 const Stack = createStackNavigator();
 
@@ -51,7 +51,7 @@ function App() {
     return (
         <NavigationContainer>
             <Stack.Navigator 
-                initialRouteName="SongRecommendation"
+                initialRouteName="Auth" // Start on AuthScreen
                 screenOptions={{
                     headerStyle: {
                         backgroundColor: '#6200EE'
@@ -63,17 +63,22 @@ function App() {
                     },
                 }}
             >
-                <Stack.Screen //Song Rec Screen
+                <Stack.Screen 
+                    name="Auth" 
+                    component={AuthScreen} 
+                    options={{ title: 'Sign In / Sign Up' }} 
+                />
+                <Stack.Screen 
                     name="SongRecommendation" 
                     component={SongRecommendationScreen} 
                     options={{ title: 'Share a Song' }} 
                 />
-                <Stack.Screen //Add Song Screen
+                <Stack.Screen 
                     name="AddSong" 
                     component={AddSongScreen} 
                     options={{ title: 'Add a Song' }}
                 />
-                <Stack.Screen //Genre List Screen
+                <Stack.Screen 
                     name="GenreList" 
                     component={GenreListScreen} 
                     options={{ title: 'Genre List' }}
