@@ -1,13 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTheme } from '@/utils/ThemeContext';
 import { getDeezerGenres } from '@/utils/deezerAPI';
 import { getAllGenres } from '@/utils/StorageHelper';
+import { Ionicons } from '@expo/vector-icons';
 
 const GenreListScreen = () => {
+    const [username, setUsername] = useState("");
     const [genres, setGenres] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const navigation = useNavigation();
+    const { isDarkMode } = useTheme();
+
+    useEffect(() => {
+        const fetchUsername = async () => {
+            const storedUsername = await AsyncStorage.getItem("username");
+            if (storedUsername) {
+                setUsername(storedUsername);
+            }
+        };
+        fetchUsername();
+    }, []);
 
     const fetchGenres = async () => {
         setIsLoading(true);
@@ -66,13 +81,25 @@ const GenreListScreen = () => {
     );
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Genres</Text>
+        <View style={[styles.container, { backgroundColor: isDarkMode ? "#323231" : "#CCCCCC" }]}>
+
+            <View style={styles.headerContainer}>
+                <Text style={[styles.title, { color: isDarkMode ? "#79E872" : "#188D1E" }]}>
+                    {username ? `${username}'s Genres` : "Your Genres"}
+                </Text>
+
+                <TouchableOpacity
+                    style={styles.settingsButton}
+                    onPress={() => navigation.navigate('Settings')}
+                >
+                    <Ionicons name="settings" size={30} color="white" />
+                </TouchableOpacity>
+            </View>
 
             {isLoading ? (
                 <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#66BEBA" />
-                    <Text style={styles.loadingText}>Loading genres...</Text>
+                    <ActivityIndicator size="large" color={isDarkMode ? "#79E872" : "#188D1E"} />
+                    <Text style={[styles.loadingText, { color: isDarkMode ? "#79E872" : "#188D1E" }]}>Loading genres...</Text>
                 </View>
             ) : genres.length > 0 ? (
                 <FlatList
@@ -81,7 +108,7 @@ const GenreListScreen = () => {
                     renderItem={renderItem}
                 />
             ) : (
-                <Text style={styles.emptyText}>No genres available.</Text>
+                <Text style={[styles.emptyText, { color: isDarkMode ? "#CCC" : "#666"}]}>No genres available.</Text>
             )}
 
             <TouchableOpacity style={styles.refreshButton} onPress={fetchGenres}>
@@ -92,7 +119,7 @@ const GenreListScreen = () => {
                 style={styles.backButton}
                 onPress={() => navigation.navigate('SongRecommendation')}
             >
-                <Text style={styles.backButtonText}>Back to Song Recommendations</Text>
+                <Text style={styles.backButtonText}>Go to Song Recommendations</Text>
             </TouchableOpacity>
         </View>
     );
@@ -105,13 +132,33 @@ const styles = StyleSheet.create({
         justifyContent: "flex-start",
         backgroundColor: '#323231',
     },
+    headerContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        marginBottom: 50,
+    },
+    settingsButton: {
+        position: 'absolute',
+        top: 1,
+        right: 1,
+        width: 50,
+        height: 50,
+        backgroundColor: '#4A90E2',
+        borderRadius: 50,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 5,
+        zIndex: 10,
+    },
     title: {
-        fontSize: 30,
+        fontSize: 40,
         fontFamily: 'Lobster',
         fontWeight: 'bold',
         marginBottom: 20,
         textAlign: 'center',
-        color: '#66BEBA',
+        left: 80,
+        top: 30,
     },
     loadingContainer: {
         flex: 1,
@@ -121,16 +168,14 @@ const styles = StyleSheet.create({
     loadingText: {
         marginTop: 10,
         fontSize: 16,
-        color: '#66BEBA',
     },
     emptyText: {
         fontSize: 18,
-        color: '#666',
         textAlign: 'center',
         marginTop: 20,
     },
     button: {
-        backgroundColor: '#59045C',
+        backgroundColor: '#C564E8',
         padding: 10,
         borderRadius: 10,
         borderWidth: 1,
@@ -139,12 +184,12 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     buttonText: {
-        color: '#66BEBA',
+        color: '#79E872',
         fontSize: 16,
         fontWeight: 'bold',
     },
     refreshButton: {
-        backgroundColor: '#FF6347',
+        backgroundColor: '#C564E8',
         padding: 10,
         borderRadius: 10,
         alignItems: 'center',
@@ -156,7 +201,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     backButton: {
-        backgroundColor: '#007BFF',
+        backgroundColor: '#D75D92',
         padding: 10,
         borderRadius: 10,
         alignItems: 'center',

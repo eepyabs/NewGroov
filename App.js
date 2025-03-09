@@ -4,11 +4,13 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import * as Font from 'expo-font';
 import { Audio } from 'expo-av';
+import { ThemeProvider } from './utils/ThemeContext';
 import SongRecommendationScreen from './screens/SongRecommendationScreen';
 import AddSongScreen from './screens/AddSongScreen';
 import GenreListScreen from './screens/GenreListScreen';
 import GenreDetailScreen from './screens/GenreDetailScreen';
 import AuthScreen from './screens/AuthScreen';
+import SettingsScreen from './screens/SettingsScreen';
 
 const Stack = createStackNavigator();
 
@@ -49,47 +51,54 @@ function App() {
     }
 
     return (
-        <NavigationContainer>
-            <Stack.Navigator 
-                initialRouteName="Auth" // Start on AuthScreen
-                screenOptions={{
-                    headerStyle: {
-                        backgroundColor: '#6200EE'
-                    },
-                    headerTintColor: '#fff',
-                    headerTintStyle: {
-                        fontWeight: 'bold',
-                        fontFamily: 'Lobster',
-                    },
-                }}
-            >
-                <Stack.Screen 
-                    name="Auth" 
-                    component={AuthScreen} 
-                    options={{ title: 'Sign In / Sign Up' }} 
-                />
-                <Stack.Screen 
-                    name="SongRecommendation" 
-                    component={SongRecommendationScreen} 
-                    options={{ title: 'Share a Song' }} 
-                />
-                <Stack.Screen 
-                    name="AddSong" 
-                    component={AddSongScreen} 
-                    options={{ title: 'Add a Song' }}
-                />
-                <Stack.Screen 
-                    name="GenreList" 
-                    component={GenreListScreen} 
-                    options={{ title: 'Genre List' }}
-                />
-                <Stack.Screen 
-                    name="GenreDetail" 
-                    component={GenreDetailScreen} 
-                    options={{ title: 'Genre Details' }}
-                />
-            </Stack.Navigator>
-        </NavigationContainer>
+        <ThemeProvider>
+            <NavigationContainer>
+                <Stack.Navigator 
+                    initialRouteName="Auth" // Start on AuthScreen
+                    screenOptions={{
+                        headerStyle: {
+                            backgroundColor: '#6200EE'
+                        },
+                        headerTintColor: '#fff',
+                        headerTintStyle: {
+                            fontWeight: 'bold',
+                            fontFamily: 'Lobster',
+                        },
+                    }}
+                >
+                    <Stack.Screen 
+                        name="Auth" 
+                        component={AuthScreen} 
+                        options={{ title: 'Sign In / Sign Up' }} 
+                    />
+                    <Stack.Screen 
+                        name="SongRecommendation" 
+                        component={SongRecommendationScreen} 
+                        options={{ title: 'Share a Song' }} 
+                    />
+                    <Stack.Screen 
+                        name="AddSong" 
+                        component={AddSongScreen} 
+                        options={{ title: 'Add a Song' }}
+                    />
+                    <Stack.Screen 
+                        name="GenreList" 
+                        component={GenreListScreen} 
+                        options={{ title: 'Genre List' }}
+                    />
+                    <Stack.Screen
+                        name="Settings"
+                        component={SettingsScreen}
+                        options={{ title: 'Settings'}}
+                    />
+                    <Stack.Screen 
+                        name="GenreDetail" 
+                        component={GenreDetailScreen} 
+                        options={{ title: 'Genre Details' }}
+                    />
+                </Stack.Navigator>
+            </NavigationContainer>
+        </ThemeProvider>
     );
 }
 

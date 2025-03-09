@@ -1,26 +1,37 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from "react-native";
+import { useTheme } from '@/utils/ThemeContext';
 
 const AuthScreen = ({ navigation  }) => {
     const [isSignUp, setIsSignUp] = useState(true);
-    const [email, setEmail] = useState("");
+    const [username, setUsername] = useState("");
+    const [identifier, setIdentifier] = useState("");
     const [password, setPassword] = useState("");
+    const { isDarkMode } = useTheme();
 
     const handleAuth = async () => {
-        const endpoint = isSignUp ? "signup.php" : "signin.php";
+        const endpoint = isSignUp ? "SignUp.php" : "SignIn.php";
+
+        const requestBody = isSignUp
+            ? { username, email: identifier, password }
+            : { identifier, password };
 
         try {
-            const response = await fetch(`http://192.168.195.24/SignUp.php`, {
+            const response = await fetch(`http://192.168.195.24/${endpoint}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json"},
-                body: JSON.stringify({ email, password }),
+                body: JSON.stringify(requestBody),
             });
 
             const data = await response.json();
 
             if (data.success) {
+                if (!isSignUp) {
+                    await AsyncStorage.setItem("username", data.username);
+                }
                 Alert.alert("Success", data.success);
-                navigation.navigate("SongRecommendation");
+                navigation.navigate("GenreList");
             } else {
                 Alert.alert("Error", data.error);
             }
@@ -31,20 +42,32 @@ const AuthScreen = ({ navigation  }) => {
     };
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>{isSignUp ? "Sign Up" : "Sign In"}</Text>
+        <View style={[styles.container, { backgroundColor: isDarkMode ? "#323231" : "#CCCCCC" }]}>
+            <Text style={[styles.title, { color: isDarkMode ? "#79E872" : "#188D1E" }]}>
+                {isSignUp ? "Sign Up" : "Sign In"}
+            </Text>
+
+            {isSignUp && (
+                <TextInput
+                    style={[styles.input, { backgroundColor: isDarkMode ? "#91908F" : "#FFFFFF" }]}
+                    placeholder="Choose a username"
+                    autoCapitalize="none"
+                    value={username}
+                    onChangeText={setUsername}
+                />
+            )}
 
             <TextInput
-                style={styles.input}
-                placeholder="Email"
-                keyboardType="email-address"
+                style={[styles.input, { backgroundColor: isDarkMode ? "#91908F" : "#FFFFFF" }]}
+                placeholder={isSignUp ? "Email" : "Email or Username"}
+                keyboardType={isSignUp ? "email-address" : "default"}
                 autoCapitalize="none"
-                value={email}
-                onChangeText={setEmail}
+                value={identifier}
+                onChangeText={setIdentifier}
             />
 
             <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: isDarkMode ? "#91908F" : "#FFFFFF" }]}
                 placeholder="Password"
                 secureTextEntry
                 value={password}
@@ -56,7 +79,7 @@ const AuthScreen = ({ navigation  }) => {
             </TouchableOpacity>
 
             <TouchableOpacity onPress={() => setIsSignUp(!isSignUp)}>
-                <Text style={styles.switchText}>
+                <Text style={[styles.switchText, { color: isDarkMode ? "#79E872" : "#188D1E" }]}>
                     {isSignUp ? "Already have an account? Sign In" : "Don't have an account? Sign Up"}
                 </Text>
             </TouchableOpacity>
@@ -69,14 +92,12 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "#323231",
         padding: 20,
     },
     title: {
         fontSize: 24,
         fontWeight: "bold",
         marginBottom: 20,
-        color: "#79E872",
     },
     input: {
         width: "80%",
@@ -85,7 +106,6 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: "black",
         borderRadius: 8,
-        backgroundColor: "#91908F",
     },
     button: {
         backgroundColor: "#C564E8",
@@ -101,7 +121,6 @@ const styles = StyleSheet.create({
     },
     switchText: {
         marginTop: 15,
-        color: "#79E872",
         fontWeight: "bold",
     },
 });

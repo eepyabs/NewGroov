@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Image, ActivityIndicator, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Audio } from 'expo-av';
+import { useTheme } from '../utils/ThemeContext';
 
 const fetchSongSuggestions = async (songTitle) => {
     try {
@@ -32,8 +33,8 @@ const fetchSongSuggestions = async (songTitle) => {
                 title: song.title,
                 artist: song.artist.name,
                 albumCover: song.album.cover_medium || null,
-                previewUrl: song.preview || null,  // Ensure preview URL exists
-                genre: genreName, // Use genre from Deezer album API
+                previewUrl: song.preview || null,
+                genre: genreName,
             };
         }));
 
@@ -49,6 +50,7 @@ const SongRecommendationScreen = ({ navigation }) => {
     const [songSuggestions, setSongSuggestions] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [sound, setSound] = useState(null);
+    const { isDarkMode } = useTheme();
 
     const handleShare = async () => {
         if (songTitle.trim() !== '') {
@@ -71,6 +73,8 @@ const SongRecommendationScreen = ({ navigation }) => {
             return;
         }
         try {
+            await Audio.setIsEnabledAsync(true);
+
             const response = await fetch(previewUrl, { method: 'HEAD'});
 
             if (!response.ok) {
@@ -106,14 +110,17 @@ const SongRecommendationScreen = ({ navigation }) => {
     );
 
     return (
-        <View style={styles.container}>
-            <Image source={require('../images/dancing_cat.gif')} style={styles.dancingCat} />
+        <View style={[styles.container, { backgroundColor: isDarkMode ? "#323231" : "#CCCCCC" }]}>
             <Image source={require('../images/logo.png')} style={styles.logo} />
-            <Text style={styles.title}>Find your NewGroov!</Text>
+
+            <Text style={[styles.title, { color: isDarkMode ? "#79E872" : "#188D1E" }]}>
+                Find your NewGroov!
+            </Text>
 
             <TextInput
-                style={styles.input}
+                style={[styles.input, {backgroundColor: isDarkMode ? "#91908F" : "#FFFFFF", color: isDarkMode ? "#FFFFFF" : "#000" }]}
                 placeholder="Enter song title"
+                placeholderTextColor={isDarkMode ? "#DDD" : "#666"}
                 value={songTitle}
                 onChangeText={setSongTitle}
             />
@@ -122,21 +129,23 @@ const SongRecommendationScreen = ({ navigation }) => {
             </TouchableOpacity>
 
             {isLoading ? (
-                <ActivityIndicator size="large" color="66BEBA" />
+                <ActivityIndicator size="large" color="79E872" />
             ) : (
                 <FlatList
                     data={songSuggestions}
                     renderItem={({ item }) => (
-                        <View style={styles.songItem}>
+                        <View style={[styles.songItem, { backgroundColor: isDarkMode ? "#444" : "#DDD" }]}>
                             <Image source={{ uri: item.albumCover }} style={styles.albumCover} />
                             <View style={styles.songInfo}>
-                                <Text style={styles.songTitle}>{item.title}</Text>
-                                <Text style={styles.songArtist}>{item.artist}</Text>
+                                <Text style={[styles.songTitle, { color: isDarkMode ? "white" : "black" }]}>{item.title}</Text>
+                                <Text style={[styles.songArtist, {color: isDarkMode ? "white" : "black"}]}>{item.artist}</Text>
+
                                 <TouchableOpacity style={styles.playButton} onPress={() => playPreview(item.previewUrl)}>
-                                    <Text style={styles.buttonText}>▶ Play Preview</Text>
+                                    <Text style={[styles.playButtonText, { color: isDarkMode ? "black" : "white" }]}>▶ Play Preview</Text>
                                 </TouchableOpacity>
+
                                 <TouchableOpacity style={styles.selectButton} onPress={() => handleSongSelect(item)}>
-                                    <Text style={styles.buttonText}>✔ Select Song</Text>
+                                    <Text style={[styles.SelectButtonText, { color: isDarkMode ? "black" : "white" }]}>✔ Select Song</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -164,20 +173,12 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-start',
         alignItems: 'center',
         padding: 20,
-        backgroundColor: '#323231',
-    },
-    dancingCat: {
-        width: 175,
-        height: 175,
-        position: 'absolute',
-        top: 20,
-        left: 10,
     },
     logo: {
-        width: 100,
-        height: 100,
+        width: 200,
+        height: 200,
         position: 'absolute',
-        top: 200,
+        top: 100,
         alignSelf: 'center',
     },
     title: {
@@ -185,21 +186,18 @@ const styles = StyleSheet.create({
         fontFamily: 'Lobster',
         fontWeight: 'bold',
         marginBottom: 20,
-        color: '#66BEBA',
         marginTop: 300,
         marginLeft: 10,
     },
     input: {
         width: '80%',
         height: 40,
-        borderColor: '#ccc',
         borderWidth: 1,
         paddingLeft: 10,
         marginBottom: 20,
-        color: '#66BEBA',
     },
     button: {
-        backgroundColor: '#59045C',
+        backgroundColor: '#C564E8',
         padding: 10,
         borderRadius: 10,
         borderWidth: 1,
@@ -208,14 +206,13 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     buttonText: {
-        color: '#66BEBA',
+        color: '#79E872',
         fontSize: 16,
         fontWeight: 'bold',
     },
     songItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#444',
         padding: 15,
         borderRadius: 10,
         marginBottom: 15,
@@ -235,12 +232,10 @@ const styles = StyleSheet.create({
     },
     songTitle: {
         fontSize: 16,
-        color: '#fff',
         fontWeight: 'bold',
     },
     songArtist: {
         fontSize: 14,
-        color: '#ccc',
         marginBottom: 5,
     },
     playButton: {
@@ -251,6 +246,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop: 8,
     },
+    playButtonText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
     selectButton: {
         backgroundColor: '#FF6347',
         paddingVertical: 4,
@@ -258,6 +257,10 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         alignItems: 'center',
         marginTop: 8,
+    },
+    SelectButtonText: {
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 });
 
