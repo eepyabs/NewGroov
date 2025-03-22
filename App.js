@@ -11,6 +11,7 @@ import GenreListScreen from './screens/GenreListScreen';
 import GenreDetailScreen from './screens/GenreDetailScreen';
 import AuthScreen from './screens/AuthScreen';
 import SettingsScreen from './screens/SettingsScreen';
+import FindGenresScreen from './screens/FindGenresScreen';
 
 const Stack = createStackNavigator();
 
@@ -75,6 +76,11 @@ function App() {
                         name="SongRecommendation" 
                         component={SongRecommendationScreen} 
                         options={{ title: 'Share a Song' }} 
+                    />
+                    <Stack.Screen
+                        name="FindGenres"
+                        component={FindGenresScreen}
+                        options={{ title: 'Find a Genre' }}
                     />
                     <Stack.Screen 
                         name="AddSong" 

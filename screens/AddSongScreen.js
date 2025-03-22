@@ -68,7 +68,7 @@ const AddSongScreen = ({ route, navigation }) => {
 
             <Animated.View style={[styles.roundButton, { backgroundColor: colorAnimation.interpolate({
                 inputRange: [0, 1],
-                outputRange: isDarkMode ? ["#A020F0", "#8A2BE2"] : ["#59045C", "#49034B"],
+                outputRange: isDarkMode ? ["#59045C", "#49034B"] : ["#A020F0", "#8A2BE2"],
             }) }]}>
                 <TouchableOpacity onPress={handleSave}>
                     <Text style={styles.roundButtonText}>Save Song</Text>

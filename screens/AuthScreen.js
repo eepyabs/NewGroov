@@ -27,8 +27,12 @@ const AuthScreen = ({ navigation  }) => {
             const data = await response.json();
 
             if (data.success) {
-                if (!isSignUp) {
-                    await AsyncStorage.setItem("username", data.username);
+                const userToStore = isSignUp ? username : data.username;
+                if (userToStore) {
+                    console.log("✅ Saving username to AsyncStorage: ", userToStore);
+                    await AsyncStorage.setItem("username", userToStore);
+                } else {
+                    console.error("❌ Username is missing from response.");
                 }
                 Alert.alert("Success", data.success);
                 navigation.navigate("GenreList");
@@ -51,6 +55,7 @@ const AuthScreen = ({ navigation  }) => {
                 <TextInput
                     style={[styles.input, { backgroundColor: isDarkMode ? "#91908F" : "#FFFFFF" }]}
                     placeholder="Choose a username"
+                    placeholderTextColor="black"
                     autoCapitalize="none"
                     value={username}
                     onChangeText={setUsername}
@@ -60,6 +65,7 @@ const AuthScreen = ({ navigation  }) => {
             <TextInput
                 style={[styles.input, { backgroundColor: isDarkMode ? "#91908F" : "#FFFFFF" }]}
                 placeholder={isSignUp ? "Email" : "Email or Username"}
+                placeholderTextColor="black"
                 keyboardType={isSignUp ? "email-address" : "default"}
                 autoCapitalize="none"
                 value={identifier}
@@ -69,6 +75,7 @@ const AuthScreen = ({ navigation  }) => {
             <TextInput
                 style={[styles.input, { backgroundColor: isDarkMode ? "#91908F" : "#FFFFFF" }]}
                 placeholder="Password"
+                placeholderTextColor="black"
                 secureTextEntry
                 value={password}
                 onChangeText={setPassword}

@@ -4,6 +4,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Audio } from 'expo-av';
 import { useTheme } from '../utils/ThemeContext';
 
+const dancingCatGif = require('../images/dancing_cat.gif');
+
 const fetchSongSuggestions = async (songTitle) => {
     try {
         const response = await fetch(`https://api.deezer.com/search?q=${encodeURIComponent(songTitle)}`);
@@ -19,20 +21,22 @@ const fetchSongSuggestions = async (songTitle) => {
             
             try {
                 // Fetch the genre from the album details
-                const albumResponse = await fetch(`https://api.deezer.com/album/${song.album.id}`);
-                if (albumResponse.ok) {
-                    const albumData = await albumResponse.json();
-                    genreName = albumData?.genres?.data?.[0]?.name || "Unknown Genre";
+                if (song.album && song.album.id) {
+                    const albumResponse = await fetch(`https://api.deezer.com/album/${song.album.id}`);
+                    if (albumResponse.ok) {
+                        const albumData = await albumResponse.json();
+                        genreName = albumData?.genres?.data?.[0]?.name || "Unknown Genre";
+                    }
                 }
             } catch (genreError) {
                 console.error(`Error fetching genre for song: ${song.title}`, genreError);
             }
 
             return {
-                id: song.id.toString(),
-                title: song.title,
-                artist: song.artist.name,
-                albumCover: song.album.cover_medium || null,
+                id: song.id ? song.id.toString() : `unknown-${Math.random().toString(36).substr(2, 9)}`,
+                title: song.title || "Unknown Title",
+                artist: song.artist?.name || "Unknown Artist",
+                albumCover: song.album?.cover_medium || null,
                 previewUrl: song.preview || null,
                 genre: genreName,
             };
@@ -51,9 +55,15 @@ const SongRecommendationScreen = ({ navigation }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [sound, setSound] = useState(null);
     const { isDarkMode } = useTheme();
+    const [showGif, setShowGif] = useState(true);
+
+    const logoSource = isDarkMode
+        ? require('../images/logo_dark.png')
+        : require('../images/logo_light.png');
 
     const handleShare = async () => {
         if (songTitle.trim() !== '') {
+            setShowGif(false);
             setIsLoading(true);
             const suggestions = await fetchSongSuggestions(songTitle);
             setSongSuggestions(suggestions);
@@ -62,8 +72,10 @@ const SongRecommendationScreen = ({ navigation }) => {
     };
 
     const handleSongSelect = async (song) => {
-        await stopSong();
-        navigation.navigate('AddSong', { song, genre: song.genre }); 
+        if (sound) {
+            await stopSong();
+        }
+        navigation.navigate('AddSong', { song, genre: song.genre });
     };
 
     const playPreview = async (previewUrl) => {
@@ -111,7 +123,7 @@ const SongRecommendationScreen = ({ navigation }) => {
 
     return (
         <View style={[styles.container, { backgroundColor: isDarkMode ? "#323231" : "#CCCCCC" }]}>
-            <Image source={require('../images/logo.png')} style={styles.logo} />
+            <Image source={logoSource} style={styles.logo} />
 
             <Text style={[styles.title, { color: isDarkMode ? "#79E872" : "#188D1E" }]}>
                 Find your NewGroov!
@@ -124,9 +136,13 @@ const SongRecommendationScreen = ({ navigation }) => {
                 value={songTitle}
                 onChangeText={setSongTitle}
             />
-            <TouchableOpacity style={styles.button} onPress={handleShare}>
-                <Text style={styles.buttonText}>Search for Suggestions</Text>
+            <TouchableOpacity style={[styles.button, { backgroundColor: isDarkMode ? '#ED5CB1' : '#CF3890' }]} onPress={handleShare}>
+                <Text style={[styles.buttonText, { color: isDarkMode ? "black" : "white" }]}>Search for a Song!</Text>
             </TouchableOpacity>
+
+            {showGif && (
+                <Image source={dancingCatGif} style={styles.gif} resizeMode="contain" />
+            )}
 
             {isLoading ? (
                 <ActivityIndicator size="large" color="79E872" />
@@ -137,8 +153,8 @@ const SongRecommendationScreen = ({ navigation }) => {
                         <View style={[styles.songItem, { backgroundColor: isDarkMode ? "#444" : "#DDD" }]}>
                             <Image source={{ uri: item.albumCover }} style={styles.albumCover} />
                             <View style={styles.songInfo}>
-                                <Text style={[styles.songTitle, { color: isDarkMode ? "white" : "black" }]}>{item.title}</Text>
-                                <Text style={[styles.songArtist, {color: isDarkMode ? "white" : "black"}]}>{item.artist}</Text>
+                                <Text style={[styles.songTitle, { color: isDarkMode ? "black" : "white" }]}>{item.title}</Text>
+                                <Text style={[styles.songArtist, {color: isDarkMode ? "black" : "white"}]}>{item.artist}</Text>
 
                                 <TouchableOpacity style={styles.playButton} onPress={() => playPreview(item.previewUrl)}>
                                     <Text style={[styles.playButtonText, { color: isDarkMode ? "black" : "white" }]}>▶ Play Preview</Text>
@@ -154,15 +170,28 @@ const SongRecommendationScreen = ({ navigation }) => {
                 />
             )}
 
+           <View style={styles.bottomButtonContainer}>
             <TouchableOpacity
-                style={styles.button}
+                style={[styles.bottomButton, {
+                    backgroundColor: isDarkMode ? "#C564E8" : "#BB2BF4"
+                }]}
                 onPress={async () => {
                     await stopSong();
                     navigation.replace('GenreList');
                 }}
             >
-                <Text style={styles.buttonText}>Go to Genre List</Text>
+                <Text style={[styles.buttonText, { color: isDarkMode ? "black" : "white" }]}>Go to Genre List</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity
+                style={[styles.bottomButton, {
+                    backgroundColor: isDarkMode ? "#79E872" : "#188D1E"
+                }]}
+                onPress={() => navigation.navigate('FindGenres')}
+            >
+                <Text style={[styles.buttonText, { color: isDarkMode ? "black" : "white" }]}>🔍 Find Genres</Text>
+            </TouchableOpacity>
+           </View>
         </View>
     );
 };
@@ -174,11 +203,19 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 20,
     },
-    logo: {
-        width: 200,
-        height: 200,
+    bottomButtonContainer: {
         position: 'absolute',
-        top: 100,
+        bottom: 20,
+        left: 20,
+        right: 20,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    logo: {
+        width: 250,
+        height: 250,
+        position: 'absolute',
+        top: 50,
         alignSelf: 'center',
     },
     title: {
@@ -196,12 +233,15 @@ const styles = StyleSheet.create({
         paddingLeft: 10,
         marginBottom: 20,
     },
+    gif: {
+        width: 200,
+        height: 200,
+        marginBottom: 100,
+    },
     button: {
-        backgroundColor: '#C564E8',
         padding: 10,
         borderRadius: 10,
-        borderWidth: 1,
-        borderColor: 'white',
+        borderWidth: 2,
         alignItems: 'center',
         marginBottom: 10,
     },
@@ -251,7 +291,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     selectButton: {
-        backgroundColor: '#FF6347',
+        backgroundColor: '#188D1E',
         paddingVertical: 4,
         paddingHorizontal: 4,
         borderRadius: 5,
@@ -261,6 +301,14 @@ const styles = StyleSheet.create({
     SelectButtonText: {
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    bottomButton: {
+        padding: 10,
+        borderRadius: 10,
+        borderWidth: 2,
+        borderColor: 'black',
+        width: '48%',
+        alignItems: 'center',
     },
 });
 

@@ -10,16 +10,6 @@ const SettingsScreen = () => {
     const [newPassword, setNewPassword] = useState("");
     const { isDarkMode, toggleTheme } = useTheme();
     const navigation = useNavigation();
-    
-    useEffect(() => {
-        const loadTheme = async () => {
-            const storedTheme = await AsyncStorage.getItem("theme");
-            if (storedTheme) {
-                toggleTheme(storedTheme === "dark");
-            }
-        };
-        loadTheme();
-    }, []);
 
     // Change Password
     const handleChangePassword = async () => {
@@ -79,7 +69,17 @@ const SettingsScreen = () => {
                                 body: JSON.stringify({ username }),
                             });
 
-                            const data = await response.json();
+                            const textResponse = await response.text();
+                            console.log("🔍 Raw Response: ", textResponse);
+
+                            let data;
+                            try {
+                                data = JSON.parse(textResponse);
+                            } catch (error) {
+                                console.error("❌ JSON Parse Error: ", error);
+                                Alert.alert("Error", "Server response is not in the correct format.");
+                                return;
+                            }
 
                             if (data.success) {
                                 await AsyncStorage.clear();
@@ -112,6 +112,21 @@ const SettingsScreen = () => {
 
             <Text style={[styles.title, { color: isDarkMode ? "#79E872" : "#188D1E" }]}>Settings</Text>
 
+            <View style={styles.themeContainer}>
+                <Text style={[styles.sectionTitle, isDarkMode ? styles.darkText : styles.lightText]}>
+                    Dark Mode
+                </Text>
+                <Switch
+                    value={isDarkMode}
+                    onValueChange={() => {
+                        toggleTheme();
+                        Alert.alert("Theme Changed", `Switched to ${isDarkMode ? "Light Mode" : "Dark Mode"}.`);
+                    }}
+                />
+            </View>
+
+            <View style={[styles.divider, { backgroundColor: isDarkMode ? "#FFF" : "#000" }]} />
+
             {/* Change Password Section */}
             <Text style={[styles.sectionTitle, isDarkMode ? styles.darkText : styles.lightText]}>Change Password</Text>
             <TextInput
@@ -130,24 +145,20 @@ const SettingsScreen = () => {
                 value={newPassword}
                 onChangeText={setNewPassword}
             />
-            <TouchableOpacity style={styles.button} onPress={handleChangePassword}>
-                <Text style={styles.buttonText}>Update Password</Text>
+            <TouchableOpacity style={[styles.button, { backgroundColor: isDarkMode ? "#79E872" : "#188D1E" }]} onPress={handleChangePassword}>
+                <Text style={[styles.buttonText, { color: isDarkMode ? "black" : "white" }]}>Update Password</Text>
             </TouchableOpacity>
 
-            {/* Dark Mode Toggle */}
-            <View style={styles.themeContainer}>
-                <Text style={[styles.sectionTitle, isDarkMode ? styles.darkText : styles.lightText]}>Dark Mode</Text>
-                <Switch value={isDarkMode} onValueChange={toggleTheme} />
-            </View>
+            <View style={[styles.divider, { backgroundColor: isDarkMode ? "#FFF" : "#000" }]} />
 
             {/* Logout Button */}
             <TouchableOpacity style={[styles.button, styles.logoutButton]} onPress={handleLogout}>
-                <Text style={styles.buttonText}>Log Out</Text>
+                <Text style={[styles.buttonText, { color: isDarkMode ? "black" : "white" }]}>Log Out</Text>
             </TouchableOpacity>
 
             {/* Delete Account Button */}
             <TouchableOpacity style={[styles.button, styles.deleteButton]} onPress={handleDeleteAccount}>
-                <Text style={styles.buttonText}>Delete Account</Text>
+                <Text style={[styles.buttonText, { color: isDarkMode ? "black" : "white" }]}>Delete Account</Text>
             </TouchableOpacity>
         </View>
     );
@@ -167,9 +178,23 @@ const styles = StyleSheet.create({
         backgroundColor: "#323231",
     },
     title: {
-        fontSize: 24,
+        fontSize: 40,
+        fontFamily: 'Lobster',
         fontWeight: "bold",
         marginBottom: 20,
+        textAlign: 'center',
+    },
+    backButton: {
+        position: "absolute",
+        top: 20,
+        left: 10,
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    backButtonText: {
+        fontSize: 16,
+        fontWeight: "bold",
+        marginLeft: 5,
     },
     lightText: {
         color: "#000",
@@ -206,9 +231,10 @@ const styles = StyleSheet.create({
         width: "80%",
         alignItems: "center",
         marginTop: 10,
+        borderWidth: 2,
+        borderColor: "black",
     },
     buttonText: {
-        color: "white",
         fontSize: 16,
         fontWeight: "bold",
     },
@@ -220,10 +246,18 @@ const styles = StyleSheet.create({
         marginTop: 20,
     },
     logoutButton: {
-        backgroundColor: "#D75D92",
+        borderWidth: 2,
+        borderColor: "black",
     },
     deleteButton: {
         backgroundColor: "red",
+        borderWidth: 2,
+        borderColor: "black",
+    },
+    divider: {
+        height: 1,
+        width: "80%",
+        marginVertical: 20,
     },
 });
 

@@ -10,7 +10,9 @@ export const ThemeProvider = ({ children }) => {
         const loadTheme = async () => {
             const storedTheme = await AsyncStorage.getItem('theme');
             if (storedTheme === "dark") {
-                setIsDarkMode(true);
+                setIsDarkMode(storedTheme === "dark");
+            } else {
+                await AsyncStorage.setItem("theme", "light");
             }
         };
         loadTheme();
@@ -19,7 +21,7 @@ export const ThemeProvider = ({ children }) => {
     const toggleTheme = async () => {
         const newTheme = isDarkMode ? "light" : "dark";
         setIsDarkMode(!isDarkMode);
-        await AsyncStorage.setItem('theme', newTheme);
+        await AsyncStorage.setItem("theme", newTheme);
     };
 
     return (

@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndi
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '@/utils/ThemeContext';
-import { getDeezerGenres } from '@/utils/deezerAPI';
 import { getAllGenres } from '@/utils/StorageHelper';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -16,26 +15,30 @@ const GenreListScreen = () => {
 
     useEffect(() => {
         const fetchUsername = async () => {
-            const storedUsername = await AsyncStorage.getItem("username");
-            if (storedUsername) {
-                setUsername(storedUsername);
+            try {
+                const storedUsername = await AsyncStorage.getItem("username");
+                
+                if (storedUsername) {
+                    console.log("✅ Loaded username: ", storedUsername);
+                    setUsername(storedUsername);
+                } else {
+                    console.log("⚠️ No username found in AsyncStorage");
+                }
+            } catch (error) {
+                console.error("❌ Error fetching username: ", error);
             }
         };
+
+        const unsubscribe = navigation.addListener("focus", fetchUsername);
         fetchUsername();
-    }, []);
+
+        return unsubscribe;
+    }, [navigation]);
 
     const fetchGenres = async () => {
         setIsLoading(true);
         try {
             const storedGenres = await getAllGenres();
-            const deezerGenres = await getDeezerGenres();
-
-            const validDeezerGenres = Array.isArray(deezerGenres)
-                ? deezerGenres.filter((genre) => genre.id && genre.name).map((genre) => ({
-                    id: `deezer-${genre.id}`,
-                    name: genre.name.trim(),
-                }))
-                : [];
 
             const validStoredGenres = Array.isArray(storedGenres)
                 ? storedGenres.map((genre, index) => ({
@@ -44,15 +47,11 @@ const GenreListScreen = () => {
                 }))
                 : [];
 
-            const mergedGenres = [...validStoredGenres, ...validDeezerGenres].filter(
-                (value, index, self) => index === self.findIndex((g) => g.name === value.name)
-            );
-
-            console.log("🎵 Fetched Genres:", mergedGenres);
-            setGenres(mergedGenres);
+            console.log("🎵 User Added Genres:", validStoredGenres);
+            setGenres(validStoredGenres);
         } catch (error) {
-            console.error('❌ Error fetching genres:', error);
-            Alert.alert('Error', 'Could not fetch genres from Deezer. Please try again.');
+            console.error('❌ Error fetching stored genres:', error);
+            Alert.alert('Error', 'Could not fetch stored genres. Please try again.');
         } finally {
             setIsLoading(false);
         }
@@ -76,7 +75,7 @@ const GenreListScreen = () => {
             style={styles.button}
             onPress={() => handleNavigateToDetail(item.name)}
         >
-            <Text style={styles.buttonText}>{item.name}</Text>
+            <Text style={[styles.buttonText, { color: isDarkMode ? "black" : "white" }]}>{item.name}</Text>
         </TouchableOpacity>
     );
 
@@ -85,7 +84,7 @@ const GenreListScreen = () => {
 
             <View style={styles.headerContainer}>
                 <Text style={[styles.title, { color: isDarkMode ? "#79E872" : "#188D1E" }]}>
-                    {username ? `${username}'s Genres` : "Your Genres"}
+                    {username && username.trim() !== "" ? `${username}'s Genres` : "Your Genres"}
                 </Text>
 
                 <TouchableOpacity
@@ -112,14 +111,14 @@ const GenreListScreen = () => {
             )}
 
             <TouchableOpacity style={styles.refreshButton} onPress={fetchGenres}>
-                <Text style={styles.refreshButtonText}>Refresh Genres</Text>
+                <Text style={[styles.refreshButtonText, { color: isDarkMode ? "black" : "white" }]}>Refresh Genres</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-                style={styles.backButton}
+                style={[styles.songRecButton, { backgroundColor: isDarkMode ? "#79E872" : "#188D1E" }]}
                 onPress={() => navigation.navigate('SongRecommendation')}
             >
-                <Text style={styles.backButtonText}>Go to Song Recommendations</Text>
+                <Text style={[styles.songRecButtonText, { color: isDarkMode ? "black" : "white" }]}>Go to Song Recommendations</Text>
             </TouchableOpacity>
         </View>
     );
@@ -178,13 +177,12 @@ const styles = StyleSheet.create({
         backgroundColor: '#C564E8',
         padding: 10,
         borderRadius: 10,
-        borderWidth: 1,
-        borderColor: 'white',
+        borderWidth: 2,
+        borderColor: 'black',
         alignItems: 'center',
         marginBottom: 10,
     },
     buttonText: {
-        color: '#79E872',
         fontSize: 16,
         fontWeight: 'bold',
     },
@@ -192,23 +190,24 @@ const styles = StyleSheet.create({
         backgroundColor: '#C564E8',
         padding: 10,
         borderRadius: 10,
+        borderWidth: 2,
+        borderColor: 'black',
         alignItems: 'center',
         marginVertical: 10,
     },
     refreshButtonText: {
-        color: 'white',
         fontSize: 16,
         fontWeight: 'bold',
     },
-    backButton: {
-        backgroundColor: '#D75D92',
+    songRecButton: {
         padding: 10,
         borderRadius: 10,
+        borderWidth: 2,
+        borderColor: 'black',
         alignItems: 'center',
         marginVertical: 10,
     },
-    backButtonText: {
-        color: 'white',
+    songRecButtonText: {
         fontSize: 16,
         fontWeight: 'bold',
     },

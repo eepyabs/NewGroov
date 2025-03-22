@@ -48,7 +48,7 @@ export async function saveSong(genre, song) {
         const isDuplicate = storedSongs.some(
             (savedSong) =>
                 savedSong.title.toLowerCase() === song.title.toLowerCase() &&
-            savedSong.artist.toLowerCase() === song.artist.toLowerCase()
+                savedSong.artist.toLowerCase() === song.artist.toLowerCase()
         );
 
         if (isDuplicate) {
@@ -72,18 +72,13 @@ export async function saveSong(genre, song) {
         storedSongs.push(normalizedSong);
         await AsyncStorage.setItem(genreKey, JSON.stringify(storedSongs));
 
-        const allGenres = JSON.parse(await AsyncStorage.getItem("@allGenres")) || [];
-        if (!allGenres.includes(normalizedGenre)) {
-            allGenres.push(normalizedGenre);
-            await AsyncStorage.setItem("@allGenres", JSON.stringify(allGenres));
-        }
-
         console.log("✅ Song saved:", normalizedSong);
     } catch (error) {
         console.error("❌ Error saving song:", error);
         throw error;
     }
 }
+
 
 /**
  * Retrieve all songs for a given genre
@@ -102,15 +97,22 @@ export async function getSongsByGenre(genre) {
 }
 
 /**
- * Get all genres that have saved songs
+ * Get all user-added genres from AsyncStorage
+ * Ensures only genres that contain saved songs are returned
  * @returns {Promise<Array>}
  */
 export async function getAllGenres() {
     try {
-        const allGenres = JSON.parse(await AsyncStorage.getItem("@allGenres")) || [];
-        return allGenres;
+        const keys = await AsyncStorage.getAllKeys();
+
+        const genreKeys = keys.filter(key => key.startsWith("@genre_"));
+
+        const genres = genreKeys.map(key => key.replace("@genre_", ""));
+
+        console.log("🎵 User-added genres: ", genres);
+        return genres;
     } catch (error) {
-        console.error("❌ Error retrieving genres:", error);
+        console.error("❌ Error retrieving stored genres: ", error);
         return [];
     }
 }
