@@ -65,7 +65,7 @@ export async function saveSong(genre, song) {
             artist: song.artist.trim(),
             genre: song.genre?.trim() || "Miscellaneous",
             albumCover: song.albumCover || null,
-            preview: song.preview || null,
+            preview: song.preview || song.previewUrl || null,
             deezerLink: song.deezerLink || null,
         };
 

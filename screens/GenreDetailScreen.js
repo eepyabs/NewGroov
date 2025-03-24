@@ -14,11 +14,14 @@ const GenreDetailScreen = () => {
     const [songs, setSongs] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [sound, setSound] = useState(null);
+    const [currentlyPlayingId, setCurrentlyPlayingId] = useState(null);
+    const [isPaused, setIsPaused] = useState(false);
 
     const fetchUserSongs = async () => {
         setIsLoading(true);
         try {
             const savedSongs = await getSongsByGenre(genre);
+            console.log("songs loaded for genre: ", savedSongs);
             setSongs(savedSongs || []);
         } catch (error) {
             console.error("❌ Error fetching saved songs:", error);
@@ -35,9 +38,20 @@ const GenreDetailScreen = () => {
         }, [genre])
     );
 
-    const playPreview = async (previewUrl) => {
+    const playPreview = async (previewUrl, songId) => {
         if (!previewUrl) {
             Alert.alert("Preview Unavailable", "This song does not have a preview.");
+            return;
+        }
+
+        if (sound && currentlyPlayingId === songId) {
+            if (isPaused) {
+                await sound.playAsync();
+                setIsPaused(false);
+            } else {
+                await sound.pauseAsync();
+                setIsPaused(true);
+            }
             return;
         }
 
@@ -49,6 +63,8 @@ const GenreDetailScreen = () => {
                 { shouldPlay: true }
             );
             setSound(newSound);
+            setCurrentlyPlayingId(songId);
+            setIsPaused(false);
         } catch (error) {
             console.error("❌ Error playing preview:", error);
         }
@@ -63,6 +79,8 @@ const GenreDetailScreen = () => {
                 console.error("❌ Error stopping audio:", error);
             } finally {
                 setSound(null);
+                setCurrentlyPlayingId(null);
+                setIsPaused(false);
             }
         }
     };
@@ -102,8 +120,8 @@ const GenreDetailScreen = () => {
                 <Text style={[styles.songArtist, { color: isDarkMode ? "#CCC" : "#444" }]}>{item.artist}</Text>
                 <View style={styles.buttonContainer}>
                     {item.preview && (
-                        <TouchableOpacity style={[styles.previewButton, { backgroundColor: isDarkMode ? "#79E872" : "#188D1E" }]} onPress={() => playPreview(item.preview)}>
-                            <Text style={styles.buttonText}>▶ Play</Text>
+                        <TouchableOpacity style={[styles.previewButton, { backgroundColor: isDarkMode ? "#79E872" : "#188D1E" }]} onPress={() => playPreview(item.preview, item.id)}>
+                            <Text style={styles.buttonText}>{currentlyPlayingId === item.id && !isPaused ? "⏸ Pause" : "▶ Play"}</Text>
                         </TouchableOpacity>
                     )}
                     <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteSong(item)}>
@@ -144,7 +162,7 @@ const GenreDetailScreen = () => {
                     navigation.goBack();
                 }}
             >
-                <Text style={styles.buttonText}>Back to Genres</Text>
+                <Text style={[styles.buttonText, { color: isDarkMode ? "black" : "white" }]}>Back to Your Genre List</Text>
             </TouchableOpacity>
         </View>
     );
@@ -168,8 +186,8 @@ const styles = StyleSheet.create({
         padding: 10,
         borderRadius: 10,
         marginBottom: 10,
-        width: 500,
-        minHeight: 100,
+        width: 300,
+        minHeight: 150,
     },
     albumCover: {
         width: 70,
@@ -197,21 +215,24 @@ const styles = StyleSheet.create({
     },
     previewButton: {
         padding: 6,
-        borderRadius: 5,
-        marginRight: 10,
+        borderRadius: 10,
+        borderWidth: 2,
+        marginRight: 6,
     },
     deleteButton: {
         backgroundColor: "#FF6347",
         padding: 6,
-        borderRadius: 5,
+        borderRadius: 10,
+        borderWidth: 2,
     },
     buttonText: {
-        color: "white",
+        color: "black",
         fontWeight: "bold",
     },
     backButton: {
         padding: 10,
         borderRadius: 10,
+        borderWidth: 2,
         alignItems: "center",
         marginVertical: 10,
     },

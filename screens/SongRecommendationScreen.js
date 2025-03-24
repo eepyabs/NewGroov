@@ -75,6 +75,8 @@ const SongRecommendationScreen = ({ navigation }) => {
         if (sound) {
             await stopSong();
         }
+
+        console.log("saving song: ", song);
         navigation.navigate('AddSong', { song, genre: song.genre });
     };
 
@@ -123,6 +125,12 @@ const SongRecommendationScreen = ({ navigation }) => {
 
     return (
         <View style={[styles.container, { backgroundColor: isDarkMode ? "#323231" : "#CCCCCC" }]}>
+            <TouchableOpacity
+                style={[styles.quizButton, { backgroundColor: isDarkMode ? "#C564E8" : "#BB2BF4" }]}
+                onPress={() => navigation.navigate('QuizScreen')}
+            >
+                <Text style={[styles.quizButtonText, { color: isDarkMode ? "black" : "white" }]}>Can't Decide❓</Text>
+            </TouchableOpacity>
             <Image source={logoSource} style={styles.logo} />
 
             <Text style={[styles.title, { color: isDarkMode ? "#79E872" : "#188D1E" }]}>
@@ -210,6 +218,23 @@ const styles = StyleSheet.create({
         right: 20,
         flexDirection: 'row',
         justifyContent: 'space-between',
+    },
+    quizButton: {
+        position: 'absolute',
+        top: 40,
+        right: 20,
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: 'black',
+        zIndex: 999,
+    },
+    quizButtonText: {
+        fontSize: 24,
+        fontWeight: 'bold',
     },
     logo: {
         width: 250,

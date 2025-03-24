@@ -99,6 +99,7 @@ const FindGenresScreen = () => {
             artist: song.artist.name,
             albumCover: song.album.cover_medium || null,
             genre: selectedGenre.name,
+            preview: song.preview || null,
         };
 
         try {

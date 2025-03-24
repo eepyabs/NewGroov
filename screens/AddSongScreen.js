@@ -28,6 +28,8 @@ const AddSongScreen = ({ route, navigation }) => {
             artist: rawSong.artist || "Unknown Artist",
             albumCover: rawSong.albumCover || null,
             genre: genre,
+            preview: rawSong.preview || rawSong.previewUrl || null,
+            deezerLink: rawSong.deezerLink || null,
         };
 
         try {
